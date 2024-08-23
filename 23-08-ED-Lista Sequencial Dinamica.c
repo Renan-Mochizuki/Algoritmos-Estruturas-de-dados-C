@@ -3,28 +3,34 @@
 
 #define FALSE 0
 #define TRUE 1
-#define TAMANHO_MAXIMO 1000
 
 typedef int Boolean;
 typedef int TipoValorLista;
 
-// Declarando struct da lista, com uma array, e um inteiro para a posição que
-// está livre, que é equivalente ao tamanho
+// Declarando struct da lista, com um ponteiro para uma array, um inteiro para a
+// posição que está livre, que é equivalente ao tamanho e um inteiro para a
+// capacidade da array
 typedef struct {
-  TipoValorLista a[TAMANHO_MAXIMO];
+  TipoValorLista *a;
   int livre;
+  int capacidade;
 } ListaSequencial;
 
 // Função que retorna o ponteiro para a lista
-ListaSequencial *CriarLista() {
+ListaSequencial *CriarLista(int capacidade) {
   ListaSequencial *lista = (ListaSequencial *)malloc(sizeof(ListaSequencial));
+  // Alocando memória para a array, com capacidade + 1, para que seja possível
+  // utilizar a busca com sentinela no último valor
+  lista->a = malloc((capacidade + 1) * sizeof(TipoValorLista));
   lista->livre = 0;
+  lista->capacidade = capacidade;
 
   return lista;
 }
 
 void LimparLista(ListaSequencial *lista) {
-  // Libera o bloco
+  // Libera a array primeiro
+  free(lista->a);
   free(lista);
 }
 
@@ -45,24 +51,31 @@ void ImprimirLista(ListaSequencial *lista) {
 }
 
 // Função que retorna o indice do valor caso encontrado, ou retorna -1
+// Busca com sentinela
 int BuscarValor(ListaSequencial *lista, TipoValorLista valor) {
+  int i = 0;
   int tamanho = lista->livre;
-  // Loop que percorre a lista inteira
-  for (int i = 0; i < tamanho; i++) {
-    if (lista->a[i] == valor) {
-      return i;
-    }
-  }
 
-  return -1;
+  // Atribuindo o valor no fim da lista para ser usado como sentinela
+  // Não alteramos o lista->livre, assim, esse valor não tem efeito na lista
+  lista->a[tamanho] = valor;
+
+  // Percorre a lista até o valor
+  while (lista->a[i] != valor)
+    i++;
+
+  // Se o valor encontrado não estiver no final, retorna o indice
+  // Se estiver no final, é o sentinela, assim, não existe o valor na lista
+  return (i < lista->livre) ? i : -1;
 }
 
 // Função que retorna TRUE (1) caso o valor seja inserido com sucesso
 Boolean InserirValor(ListaSequencial *lista, TipoValorLista valor, int indice) {
   int tamanho = lista->livre;
+  int capacidade = lista->capacidade;
 
   // Verifica se o tamanho e o indice estão válidos
-  if (tamanho >= TAMANHO_MAXIMO || indice < 0 || indice > tamanho) {
+  if (tamanho >= capacidade || indice < 0 || indice > tamanho) {
     return FALSE;
   }
 
@@ -104,7 +117,8 @@ Boolean RemoverValor(ListaSequencial *lista, TipoValorLista valor) {
 }
 
 int main(void) {
-  ListaSequencial *listaNova = CriarLista();
+  int capacidade = 1000;
+  ListaSequencial *listaNova = CriarLista(capacidade);
   int escolha = 1;
 
   while (escolha < 5) {
@@ -134,7 +148,7 @@ int main(void) {
 
         // Pega o tamanho e reseta o indiceDigitado
         tamanho = listaNova->livre;
-        indiceDigitado = TAMANHO_MAXIMO;
+        indiceDigitado = capacidade;
 
         // Loop que para caso o indiceDigitado for menor que o tamanho da lista
         // ou menor que 0
