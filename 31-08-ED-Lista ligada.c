@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define TipoValor int
+#define FormatoValor "%d"
+
 typedef struct node {
-  int valor;
+  TipoValor valor;
   struct node *proximo;
 } itemNo;
 
@@ -11,7 +14,6 @@ typedef struct {
   itemNo *primeiro;
 } listaLigada;
 
-// Função para criar uma nova lista ligada
 listaLigada *CriarLista() {
   listaLigada *lista = malloc(sizeof(listaLigada));
   lista->tamanho = 0;
@@ -19,30 +21,20 @@ listaLigada *CriarLista() {
   return lista;
 }
 
-// Função para inserir um novo item no início da lista
-void InserirInicioLista(listaLigada *lista, int valor) {
+void InserirInicioLista(listaLigada *lista, TipoValor valor) {
   // Declarando o novo nó com o valor
   itemNo *itemNovo = malloc(sizeof(itemNo));
   itemNovo->valor = valor;
   // Aumentando o tamanho
   lista->tamanho++;
 
-  // Se a lista estiver vazia, defina o próximo do itemNovo
-  // como NULL e primeiro item como o novo nó
-  if (lista->primeiro == NULL) {
-    itemNovo->proximo = NULL;
-    lista->primeiro = itemNovo;
-    return;
-  }
-
-  // Definindo o proximo do itemNovo como o primeiro item da lista atualmente
-  // e alterando o primeiro item da lista como o item novo
+  // Definindo o proximo do itemNovo como o primeiro item da lista (pode ser
+  // NULL) e alterando o primeiro item da lista como o item novo
   itemNovo->proximo = lista->primeiro;
   lista->primeiro = itemNovo;
 }
 
-// Função para inserir um novo item no fim da lista
-void InserirFimLista(listaLigada *lista, int valor) {
+void InserirFimLista(listaLigada *lista, TipoValor valor) {
   // Declarando o novo nó
   itemNo *itemNovo = malloc(sizeof(itemNo));
   itemNovo->valor = valor;
@@ -67,11 +59,103 @@ void InserirFimLista(listaLigada *lista, int valor) {
   itemAtual->proximo = itemNovo;
 }
 
-// Função para imprimir a lista
+void InserirMeioLista(listaLigada *lista, TipoValor valor, int indice) {
+  // Declarando o novo nó
+  itemNo *itemNovo = malloc(sizeof(itemNo));
+  itemNovo->valor = valor;
+
+  // Se a lista estiver vazia, defina o próximo do itemNovo
+  // como NULL e primeiro item como o novo nó
+  if (lista->primeiro == NULL) {
+    itemNovo->proximo = NULL;
+    lista->primeiro = itemNovo;
+    // Aumentando o tamanho
+    lista->tamanho++;
+    return;
+  }
+
+  // Se o índice for 0, insira o valor no início da lista
+  if (indice == 0) {
+    InserirInicioLista(lista, valor);
+    return;
+  }
+
+  // Se o índice for maior ou igual ao tamanho,
+  // insira o valor no fim da lista
+  if (indice >= lista->tamanho) {
+    InserirFimLista(lista, valor);
+    return;
+  }
+
+  itemNo *itemAtual = lista->primeiro;
+
+  // Loop que percorre a lista até o NULL, comparando o indice
+  for (int i = 0; itemAtual != NULL; i++, itemAtual = itemAtual->proximo) {
+    if (i == indice - 1) {
+      // Altera o proximo do itemNovo para o proximo do itemAtual
+      // Insere o itemNovo depois do itemAtual
+      itemNovo->proximo = itemAtual->proximo;
+      itemAtual->proximo = itemNovo;
+      // Aumentando o tamanho
+      lista->tamanho++;
+      return;
+    }
+  }
+}
+
+int RemoverValorLista(listaLigada *lista, TipoValor valor) {
+  // Se a lista estiver vazia
+  if (lista->primeiro == NULL) {
+    return 0;
+  }
+
+  itemNo *itemAtual = lista->primeiro;
+  itemNo *itemProximo = itemAtual->proximo;
+
+  // Se o primeiro item for o valor a ser removido
+  if (itemAtual->valor == valor) {
+    lista->primeiro = itemProximo;
+    free(itemAtual);
+    // Diminui o tamanho
+    lista->tamanho--;
+    return 1;
+  }
+
+  // Loop que percorre a lista até o próximo item ser NULL
+  while (itemProximo != NULL) {
+    // Se o valor do próximo item for o valor, altera o próximo do item
+    // atual e libera o item com o valor
+    if (itemProximo->valor == valor) {
+      itemAtual->proximo = itemProximo->proximo;
+      free(itemProximo);
+      // Diminui o tamanho
+      lista->tamanho--;
+      return 1;
+    }
+
+    // Move os itens
+    itemAtual = itemProximo;
+    itemProximo = itemProximo->proximo;
+  }
+  return 0;
+}
+
+int BuscarValorLista(listaLigada *lista, TipoValor valor) {
+  itemNo *itemAtual = lista->primeiro;
+
+  // Loop que percorre a lista até o NULL, armazenando o indice
+  for (int i = 0; itemAtual != NULL; i++, itemAtual = itemAtual->proximo) {
+    if (itemAtual->valor == valor) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 void ImprimirLista(listaLigada *lista) {
   // Se a lista estiver vazia
   if (lista->primeiro == NULL) {
-    printf("\nLista vazia\n");
+    printf("\nA lista esta vazia\n");
     return;
   }
 
@@ -80,47 +164,42 @@ void ImprimirLista(listaLigada *lista) {
   printf("\nA lista esta assim: \n");
   // Loop pra percorrer até o NULL
   while (itemAtual != NULL) {
-    printf("%d, ", itemAtual->valor);
+    printf(FormatoValor " ", itemAtual->valor);
     itemAtual = itemAtual->proximo;
   }
   printf("\n\n");
 }
 
-// Função para limpar a lista
 void LimparLista(listaLigada *lista) {
-  // Verifica se a lista não está vazia
-  if (lista->primeiro != NULL) {
-    itemNo *itemAtual = lista->primeiro;
-    itemNo *itemProximo = itemAtual->proximo;
-    // Loop que percorre a lista até o próximo item ser NULL
-    while (itemProximo != NULL) {
-      free(itemAtual);
-      itemAtual = itemProximo;
-      itemProximo = itemProximo->proximo;
-    } // Caso o while acontecer, o último item ainda não foi liberado
+  itemNo *itemAtual = lista->primeiro;
 
-    // Libera o último item, ou se a lista tiver só um item, libera
+  // Loop que percorre a lista até o NULL
+  while (itemAtual != NULL) {
+    itemNo *itemProximo = itemAtual->proximo;
+    // Libera o itemAtual e avança para o próximo
     free(itemAtual);
+    itemAtual = itemProximo;
   }
+  // Libera a lista
+  free(lista);
 }
+
 int main(void) {
   listaLigada *lista = CriarLista();
-  int numeroDigitado = 0;
+  TipoValor valorDigitado = 0;
+  int indiceDigitado = 0;
   int escolha = 1;
 
-  while (escolha < 11 && escolha > 0) {
+  while (escolha < 8 && escolha > 0) {
     printf("\nQual acao deseja realizar?\n");
     printf("1 - Inserir valores no inicio da lista\n");
     printf("2 - Inserir valores no fim da lista\n");
     printf("3 - Inserir valores na lista com indice\n");
-    printf("4 - Remover o valor do inicio da lista\n");
-    printf("5 - Remover o valor do fim da lista\n");
-    printf("6 - Remover um valor da lista pelo indice\n");
-    printf("7 - Remover um certo valor\n");
-    printf("8 - Buscar um valor\n");
-    printf("9 - Ver quantos itens a lista possui\n");
-    printf("10 - Imprimir lista\n");
-    printf("-1 - Sair\n");
+    printf("4 - Remover valores\n");
+    printf("5 - Buscar valores\n");
+    printf("6 - Ver quantos itens a lista possui\n");
+    printf("7 - Imprimir lista\n");
+    printf("8 - Sair\n");
 
     scanf("%d", &escolha);
     printf("\n");
@@ -130,44 +209,96 @@ int main(void) {
       printf("Digite um numero negativo para parar\n");
       do {
         printf("Digite um numero para ser inserido\n");
-        scanf("%d", &numeroDigitado);
+        scanf(FormatoValor, &valorDigitado);
 
-        if (numeroDigitado < 0) {
+        if (valorDigitado < 0) {
           break;
         }
 
-        InserirInicioLista(lista, numeroDigitado);
+        InserirInicioLista(lista, valorDigitado);
         ImprimirLista(lista);
-      } while (numeroDigitado > 0);
+      } while (valorDigitado > 0);
       break;
+
     case 2:
       printf("Digite um numero negativo para parar\n");
       do {
         printf("Digite um numero para ser inserido\n");
-        scanf("%d", &numeroDigitado);
+        scanf(FormatoValor, &valorDigitado);
 
-        if (numeroDigitado < 0) {
+        if (valorDigitado < 0) {
           break;
         }
 
-        InserirFimLista(lista, numeroDigitado);
+        InserirFimLista(lista, valorDigitado);
         ImprimirLista(lista);
-      } while (numeroDigitado > 0);
+      } while (valorDigitado > 0);
       break;
+
     case 3:
+      printf("Digite um numero negativo para parar\n");
+      do {
+        printf("Digite um numero para ser inserido\n");
+        scanf(FormatoValor, &valorDigitado);
+
+        if (valorDigitado < 0) {
+          break;
+        }
+
+        printf("Digite um indice para inserir o valor\n");
+        scanf("%d", &indiceDigitado);
+
+        InserirMeioLista(lista, valorDigitado, indiceDigitado);
+        ImprimirLista(lista);
+      } while (valorDigitado > 0);
       break;
 
     case 4:
+      printf("Digite um numero negativo para parar\n");
+      do {
+        printf("Digite um valor para ser removido\n");
+        scanf(FormatoValor, &valorDigitado);
+
+        if (valorDigitado < 0) {
+          break;
+        }
+
+        int sucedido = RemoverValorLista(lista, valorDigitado);
+        if (sucedido) {
+          printf("O valor %d foi removido da lista\n", valorDigitado);
+          ImprimirLista(lista);
+        } else {
+          printf("O valor não foi encontrado\n");
+        }
+      } while (valorDigitado > 0);
       break;
 
     case 5:
+      printf("Digite um numero negativo para parar\n");
+      do {
+        printf("Digite um valor para ser buscado\n");
+        scanf(FormatoValor, &valorDigitado);
+
+        if (valorDigitado < 0) {
+          break;
+        }
+
+        int indiceEncontrado = BuscarValorLista(lista, valorDigitado);
+        if (indiceEncontrado >= 0) {
+          printf("O valor %d foi encontrado no indice %d\n", valorDigitado,
+                 indiceEncontrado);
+        } else {
+          printf("O valor não foi encontrado\n");
+        }
+      } while (valorDigitado > 0);
       break;
 
     case 6:
+      printf("A lista possui " FormatoValor " itens\n", lista->tamanho);
       break;
 
-    case 9:
-      printf("A lista possui %d itens\n", lista->tamanho);
+    case 7:
+      ImprimirLista(lista);
       break;
     }
   }
