@@ -32,11 +32,11 @@ void ImprimirLista(ListaSequencial *lista) {
   int tamanho = lista->livre;
 
   if (tamanho == 0) {
-    printf("\nA lista está vazia\n");
+    printf("\nA lista esta vazia\n");
     return;
   }
 
-  printf("\nA lista está assim:\n");
+  printf("\nA lista esta assim:\n");
   // Loop que percorre a lista inteira
   for (int i = 0; i < tamanho; i++) {
     printf("%d, ", lista->a[i]);
@@ -108,7 +108,7 @@ int main(void) {
   int escolha = 1;
 
   while (escolha < 5) {
-    printf("\nQual ação deseja realizar?\n");
+    printf("\nQual acao deseja realizar?\n");
     printf("1 - Inserir valores\n");
     printf("2 - Buscar valores\n");
     printf("3 - Remover valores\n");
@@ -120,84 +120,84 @@ int main(void) {
     int tamanho;
 
     switch (escolha) {
-    case 1:
-      printf("Digite um valor para ser inserido na lista:\n");
-      printf("Digite um valor negativo para parar:\n");
+      case 1:
+        printf("Digite um valor para ser inserido na lista:\n");
+        printf("Digite um valor negativo para parar:\n");
 
-      // Loop que para caso for digitado um valor negativo
-      while (numeroDigitado >= 0) {
+        // Loop que para caso for digitado um valor negativo
+        while (numeroDigitado >= 0) {
+          scanf("%d", &numeroDigitado);
+
+          if (numeroDigitado < 0) {
+            break;
+          }
+
+          // Pega o tamanho e reseta o indiceDigitado
+          tamanho = listaNova->livre;
+          indiceDigitado = TAMANHO_MAXIMO;
+
+          // Loop que para caso o indiceDigitado for menor que o tamanho da lista
+          // ou menor que 0
+          while (indiceDigitado > tamanho && indiceDigitado > 0) {
+            printf("Digite um indice ate %d. ", tamanho);
+            printf("Ou um indice negativo para inserir automaticamente:\n");
+
+            scanf("%d", &indiceDigitado);
+          }
+          // Se o indiceDigitado for negativo, atribui o tamanho no indiceLista
+          int indiceLista = indiceDigitado;
+          if (indiceDigitado < 0) {
+            indiceLista = tamanho;
+          }
+
+          Boolean funcaoSucedida =
+              InserirValor(listaNova, numeroDigitado, indiceLista);
+
+          if (funcaoSucedida) {
+            ImprimirLista(listaNova);
+          } else {
+            printf("\nO valor nao foi inserido:\n");
+          }
+
+          printf("\nDigite um valor para ser inserido na lista:\n");
+        }
+
+        break;
+      case 2:
+        printf("Digite um valor para ser buscado na lista:\n");
         scanf("%d", &numeroDigitado);
+        int indiceValor = BuscarValor(listaNova, numeroDigitado);
 
-        if (numeroDigitado < 0) {
-          break;
-        }
-
-        // Pega o tamanho e reseta o indiceDigitado
-        tamanho = listaNova->livre;
-        indiceDigitado = TAMANHO_MAXIMO;
-
-        // Loop que para caso o indiceDigitado for menor que o tamanho da lista
-        // ou menor que 0
-        while (indiceDigitado > tamanho && indiceDigitado > 0) {
-          printf("Digite um indice até %d. ", tamanho);
-          printf("Ou um indice negativo para inserir automaticamente:\n");
-
-          scanf("%d", &indiceDigitado);
-        }
-        // Se o indiceDigitado for negativo, atribui o tamanho no indiceLista
-        int indiceLista = indiceDigitado;
-        if (indiceDigitado < 0) {
-          indiceLista = tamanho;
-        }
-
-        Boolean funcaoSucedida =
-            InserirValor(listaNova, numeroDigitado, indiceLista);
-
-        if (funcaoSucedida) {
-          ImprimirLista(listaNova);
+        // Se for encontrado o valor
+        if (indiceValor >= 0) {
+          printf("O valor %d esta na posicao %d\n", numeroDigitado, indiceValor);
         } else {
-          printf("\nO valor não foi inserido:\n");
+          printf("Valor nao encontrado");
         }
-
-        printf("\nDigite um valor para ser inserido na lista:\n");
-      }
-
-      break;
-    case 2:
-      printf("Digite um valor para ser buscado na lista:\n");
-      scanf("%d", &numeroDigitado);
-      int indiceValor = BuscarValor(listaNova, numeroDigitado);
-
-      // Se for encontrado o valor
-      if (indiceValor >= 0) {
-        printf("O valor %d está na posição %d\n", numeroDigitado, indiceValor);
-      } else {
-        printf("Valor não encontrado");
-      }
-      break;
-    case 3:
-      printf("Digite um valor para ser removido na lista:\n");
-      printf("Digite um valor negativo para parar:\n");
-
-      // Loop que para caso for digitado um valor negativo
-      while (numeroDigitado >= 0) {
-        scanf("%d", &numeroDigitado);
-
-        Boolean funcaoSucedida = RemoverValor(listaNova, numeroDigitado);
-
-        // Se o valor tiver sido removido
-        if (funcaoSucedida) {
-          ImprimirLista(listaNova);
-        } else {
-          printf("\nO valor não foi removido:\n");
-        }
-
+        break;
+      case 3:
         printf("Digite um valor para ser removido na lista:\n");
-      }
-      break;
-    case 4:
-      ImprimirLista(listaNova);
-      break;
+        printf("Digite um valor negativo para parar:\n");
+
+        // Loop que para caso for digitado um valor negativo
+        while (numeroDigitado >= 0) {
+          scanf("%d", &numeroDigitado);
+
+          Boolean funcaoSucedida = RemoverValor(listaNova, numeroDigitado);
+
+          // Se o valor tiver sido removido
+          if (funcaoSucedida) {
+            ImprimirLista(listaNova);
+          } else {
+            printf("\nO valor nao foi removido:\n");
+          }
+
+          printf("Digite um valor para ser removido na lista:\n");
+        }
+        break;
+      case 4:
+        ImprimirLista(listaNova);
+        break;
     }
   }
 

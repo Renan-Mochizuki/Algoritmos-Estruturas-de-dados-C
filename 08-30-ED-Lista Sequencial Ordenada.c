@@ -37,11 +37,11 @@ void ImprimirLista(ListaSequencial *lista) {
   int tamanho = lista->livre;
 
   if (tamanho == 0) {
-    printf("\nA lista está vazia\n");
+    printf("\nA lista esta vazia\n");
     return;
   }
 
-  printf("\nA lista está assim:\n");
+  printf("\nA lista esta assim:\n");
   // Loop que percorre a lista inteira
   for (int i = 0; i < tamanho; i++) {
     printf("%d, ", lista->a[i]);
@@ -132,7 +132,7 @@ int main(void) {
   int escolha = 1;
 
   while (escolha < 5) {
-    printf("\nQual ação deseja realizar?\n");
+    printf("\nQual acao deseja realizar?\n");
     printf("1 - Inserir valores\n");
     printf("2 - Buscar valores\n");
     printf("3 - Remover valores\n");
@@ -160,7 +160,7 @@ int main(void) {
           if (funcaoSucedida) {
             ImprimirLista(listaNova);
           } else {
-            printf("\nO valor não foi inserido:\n");
+            printf("\nO valor nao foi inserido:\n");
           }
 
           printf("\nDigite um valor para ser inserido na lista:\n");
@@ -174,9 +174,9 @@ int main(void) {
 
         // Se for encontrado o valor
         if (indiceValor >= 0) {
-          printf("O valor %d está na posição %d\n", numeroDigitado, indiceValor);
+          printf("O valor %d esta na posição %d\n", numeroDigitado, indiceValor);
         } else {
-          printf("Valor não encontrado");
+          printf("Valor nao encontrado");
         }
         break;
       case 3:
@@ -193,7 +193,7 @@ int main(void) {
           if (funcaoSucedida) {
             ImprimirLista(listaNova);
           } else {
-            printf("\nO valor não foi removido:\n");
+            printf("\nO valor nao foi removido:\n");
           }
 
           printf("Digite um valor para ser removido na lista:\n");

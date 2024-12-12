@@ -4,7 +4,7 @@
 // Tempo de complexidade assintótica O(2^n)
 // n representa a quantidade de discos sendo considerados
 void hanoi(char origem, char destino, char auxiliar, int n) {
-  // Se n for 1, ou seja, chegou no último disco, por isso, podemos mover agora a peça, 
+  // Se n for 1, ou seja, chegou no último disco, por isso, podemos mover agora a peça,
   // mova da origem ao destino
   if (n == 1) {
     printf("Move de %c para %c\n", origem, destino);
