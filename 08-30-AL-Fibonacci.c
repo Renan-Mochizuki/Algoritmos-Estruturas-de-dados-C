@@ -14,7 +14,10 @@ int Fibonacci(int numero) {
 }
 
 int main(void) {
-  int limite = 20;
+  int limite;
+  printf("Digite o limite de numeros de Fibonacci que deseja imprimir:\n");
+  scanf("%d", &limite);
+
   for (int i = 1; i < limite; i++) {
     printf("%d, ", Fibonacci(i));
   }

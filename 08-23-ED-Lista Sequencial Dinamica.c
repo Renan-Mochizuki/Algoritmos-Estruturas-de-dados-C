@@ -153,7 +153,7 @@ int main(void) {
           // Loop que para caso o indiceDigitado for menor que o tamanho da lista
           // ou menor que 0
           while (indiceDigitado > tamanho && indiceDigitado > 0) {
-            printf("Digite um indice ate %d. ", tamanho);
+            printf("Digite um indice ate %d \n", tamanho);
             printf("Ou um indice negativo para inserir automaticamente:\n");
 
             scanf("%d", &indiceDigitado);
@@ -164,8 +164,7 @@ int main(void) {
             indiceLista = tamanho;
           }
 
-          Boolean funcaoSucedida =
-              InserirValor(listaNova, numeroDigitado, indiceLista);
+          Boolean funcaoSucedida = InserirValor(listaNova, numeroDigitado, indiceLista);
 
           if (funcaoSucedida) {
             ImprimirLista(listaNova);
