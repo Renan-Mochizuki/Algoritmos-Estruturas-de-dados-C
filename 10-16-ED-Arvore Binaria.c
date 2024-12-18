@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #define FALSE 0
 #define TRUE 1
 #define ESQUERDO 1
 #define DIREITO 2
+#define INDEFINIDO 0
 #define FormatoValor "%d"
 #define FormatoLado "%d"
 
@@ -117,20 +119,20 @@ Boolean InserirValor(Arvore* arvore, itemNo* noPai, TipoValor valor, Lado lado) 
 }
 
 // Função que retorna o nó pai de um nó
-itemNo* RetornarNoPai(itemNo* raiz, itemNo* noFilho) {
-  // Se não tiver raiz ou se o noFilho for a própria raiz, retorne NULL
-  if (!raiz || raiz == noFilho) return NULL;
+itemNo* RetornarNoPai(itemNo* noAtual, itemNo* noFilho) {
+  // Se noAtual for NULL ou se o noFilho for o próprio noAtual (raiz da árvore), retorne NULL
+  if (!noAtual || noAtual == noFilho) return NULL;
 
-  // Se o filho da esquerda ou direita existir e for o nó passado, então retorne essa raiz
-  if (raiz->esq && raiz->esq == noFilho) return raiz;
-  if (raiz->dir && raiz->dir == noFilho) return raiz;
+  // Se o filho da esquerda ou direita existir e for o nó passado, então retorne esse no
+  if (noAtual->esq && noAtual->esq == noFilho) return noAtual;
+  if (noAtual->dir && noAtual->dir == noFilho) return noAtual;
 
   // Se ainda não for encontrado, busque no nó da esquerda
-  itemNo* auxiliar = RetornarNoPai(raiz->esq, noFilho);
+  itemNo* auxiliar = RetornarNoPai(noAtual->esq, noFilho);
   if (auxiliar) return auxiliar;
 
   // Por fim, busque no nó da direita
-  return RetornarNoPai(raiz->dir, noFilho);
+  return RetornarNoPai(noAtual->dir, noFilho);
 }
 
 // Função recursiva que remove um nó da árvore
@@ -186,6 +188,7 @@ void LimparArvoreRecursiva(itemNo* no) {
 // Função que limpa a árvore
 void LimparArvore(Arvore* arvore) {
   LimparArvoreRecursiva(arvore->raiz);
+  arvore->raiz = NULL;
 }
 
 // Função recursiva que conta quantos valores a árvore tem
@@ -220,17 +223,32 @@ void EncontrarNoLivreRecursiva(itemNo* no, int alturaAtual, int* menorAltura, it
   EncontrarNoLivreRecursiva(no->dir, alturaAtual + 1, menorAltura, noLivre);
 }
 
-// Função que retorna um nó livre mais próximo da raiz (mais alto)
+// Função que retorna um nó livre mais próximo da raiz (menor altura)
 itemNo* EncontrarNoLivre(Arvore* arvore) {
   // Se a árvore estiver vazia
   if (arvore->raiz == NULL) return NULL;
 
   itemNo* noLivre = NULL;
-  int menorAltura = 999999;  // Ou __INT_MAX__
+  int menorAltura = INT_MAX;
 
   EncontrarNoLivreRecursiva(arvore->raiz, 0, &menorAltura, &noLivre);
 
   return noLivre;
+}
+
+// Função que insere um valor na árvore sem precisar passar um nó pai
+Boolean InserirValorAutomaticamente(Arvore* arvore, TipoValor valor) {
+  // Encontra um nó livre
+  itemNo* noLivre = EncontrarNoLivre(arvore);
+  Lado lado;
+
+  // Verifica qual lado que está livre
+  if (noLivre && !noLivre->esq)
+    lado = ESQUERDO;
+  else if (noLivre && !noLivre->dir)
+    lado = DIREITO;
+
+  return InserirValor(arvore, noLivre, valor, lado);
 }
 
 // Função que imprime os valores desde a raiz até o nó
@@ -250,9 +268,9 @@ void ImprimirRotaDoNoValores(Arvore* arvore, itemNo* no) {
 
 // Função que imprime os lados seguidos desde a raiz até o nó
 void ImprimirRotaDoNoLados(Arvore* arvore, itemNo* noPai, itemNo* no) {
-  itemNo* noAvo = RetornarNoPai(arvore->raiz, noPai);
-
   if (!noPai) return;
+
+  itemNo* noAvo = RetornarNoPai(arvore->raiz, noPai);
 
   ImprimirRotaDoNoLados(arvore, noAvo, noPai);
 
@@ -276,13 +294,13 @@ void ImprimirRotaDoNo(Arvore* arvore, itemNo* no) {
 int main(void) {
   Arvore* arvore = CriarArvore();
   TipoValor valorDigitado, valorNoPai;
-  Lado lado = 0;
+  Lado lado = INDEFINIDO;
   int escolha = 1;
 
   while (escolha > 0 && escolha < 7) {
     printf("\nQual acao deseja realizar?\n");
-    printf("1 - Inserir valores no arvore automaticamente\n");
-    printf("2 - Inserir valores no arvore escolhendo o no pai\n");
+    printf("1 - Inserir valores na arvore automaticamente\n");
+    printf("2 - Inserir valores na arvore escolhendo o no pai\n");
     printf("3 - Remover valores\n");
     printf("4 - Buscar valores\n");
     printf("5 - Ver quantos itens a arvore possui\n");
@@ -299,21 +317,12 @@ int main(void) {
       case 1:
         printf("Digite um valor negativo para parar\n");
         while (valorDigitado >= 0) {
-          itemNo* noLivre;
-
           printf("Digite um valor para ser inserido\n");
           scanf(FormatoValor, &valorDigitado);
 
           if (valorDigitado < 0) break;
 
-          noLivre = EncontrarNoLivre(arvore);
-          // Verifica qual lado que está livre
-          if (noLivre && !noLivre->esq)
-            lado = ESQUERDO;
-          else if (noLivre && !noLivre->dir)
-            lado = DIREITO;
-
-          Boolean funcaoSucedida = InserirValor(arvore, noLivre, valorDigitado, lado);
+          Boolean funcaoSucedida = InserirValorAutomaticamente(arvore, valorDigitado);
 
           if (funcaoSucedida)
             ImprimirValores(arvore);
@@ -361,13 +370,13 @@ int main(void) {
         break;
 
       case 3:
+        if (!arvore->raiz) {
+          printf("A arvore esta vazia\n");
+          break;
+        }
+
         printf("Digite um valor negativo para parar\n");
         while (valorDigitado >= 0) {
-          if (!arvore->raiz) {
-            printf("A arvore esta vazia\n");
-            break;
-          }
-
           ImprimirValores(arvore);
           printf("Digite um valor para ser removido\n");
           scanf(FormatoValor, &valorDigitado);
