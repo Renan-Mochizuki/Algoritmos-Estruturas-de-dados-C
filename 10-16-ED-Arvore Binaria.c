@@ -1,6 +1,6 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 
 #define FALSE 0
 #define TRUE 1
@@ -297,7 +297,7 @@ int main(void) {
   Lado lado = INDEFINIDO;
   int escolha = 1;
 
-  while (escolha > 0 && escolha < 7) {
+  while (escolha > 0 && escolha < 8) {
     printf("\nQual acao deseja realizar?\n");
     printf("1 - Inserir valores na arvore automaticamente\n");
     printf("2 - Inserir valores na arvore escolhendo o no pai\n");
@@ -305,7 +305,8 @@ int main(void) {
     printf("4 - Buscar valores\n");
     printf("5 - Ver quantos itens a arvore possui\n");
     printf("6 - Imprimir arvore\n");
-    printf("7 - Sair\n");
+    printf("7 - Limpar arvore\n");
+    printf("8 - Sair\n");
 
     scanf("%d", &escolha);
     printf("\n");
@@ -390,17 +391,27 @@ int main(void) {
         break;
 
       case 4:
-        printf("Digite um valor para ser buscado\n");
-        scanf(FormatoValor, &valorDigitado);
+        if (!arvore->raiz) {
+          printf("A arvore esta vazia\n");
+          break;
+        }
 
-        itemNo* noEncontrado = BuscarValor(arvore, valorDigitado);
+        printf("Digite um valor negativo para parar\n");
+        while (valorDigitado >= 0) {
+          printf("Digite um valor para ser buscado\n");
+          scanf(FormatoValor, &valorDigitado);
 
-        if (noEncontrado) {
-          ImprimirValores(arvore);
-          printf("Percurso do valor desde a raiz:\n");
-          ImprimirRotaDoNo(arvore, noEncontrado);
-        } else {
-          printf("\nO valor nao foi encontrado\n");
+          if (valorDigitado < 0) break;
+
+          itemNo* noEncontrado = BuscarValor(arvore, valorDigitado);
+
+          if (noEncontrado) {
+            ImprimirValores(arvore);
+            printf("Percurso do valor desde a raiz:\n");
+            ImprimirRotaDoNo(arvore, noEncontrado);
+          } else {
+            printf("\nO valor nao foi encontrado\n");
+          }
         }
         break;
 
@@ -410,6 +421,11 @@ int main(void) {
 
       case 6:
         ImprimirValores(arvore);
+        break;
+
+      case 7:
+        LimparArvore(arvore);
+        printf("A arvore foi limpa\n");
         break;
     }
   }
