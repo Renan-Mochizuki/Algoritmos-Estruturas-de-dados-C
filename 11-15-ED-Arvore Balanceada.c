@@ -3,10 +3,15 @@
 
 #define FALSE 0
 #define TRUE 1
+#define ESQUERDO 1
+#define DIREITO 2
+#define INDEFINIDO 0
 #define FormatoValor "%d"
+#define FormatoLado "%d"
 
 typedef int Boolean;
 typedef int TipoValor;
+typedef int Lado;
 
 // Declarando struct de um nó da árvore
 typedef struct arvoreNo {
@@ -84,6 +89,9 @@ int CalcularBalanco(itemNo* no) {
   int altura_esq = (no->esq) ? no->esq->h : -1;
   int altura_dir = (no->dir) ? no->dir->h : -1;
 
+printf("Altura esq: %d\n", altura_esq);
+printf("Altura dir: %d\n", altura_dir);
+printf("Balanco: %d\n", altura_dir - altura_esq);
   return altura_dir - altura_esq;
 }
 
@@ -93,7 +101,7 @@ int RetornarMaior(int a, int b) {
 }
 
 // Função que atualiza o parâmetro de altura de um nó, tendo todos seus nós filhos já atualizados
-void atualiza_altura(itemNo* no) {
+void AtualizarAlturaDoNo(itemNo* no) {
   if (no->esq && no->dir) // Se o nó tiver filho à esquerda e direita
     no->h = RetornarMaior(no->esq->h, no->dir->h) + 1;
   else if (no->dir) // Se o nó tiver filho apenas à direita
@@ -104,45 +112,199 @@ void atualiza_altura(itemNo* no) {
     no->h = 0;
 }
 
-// Função recursiva que insere um valor não existente ordenadamente
-Boolean InserirValorRecursiva(itemNo* no, itemNo* noInserir) {
-  // Se o valor do nó for o valor a ser inserido, o valor já existe
-  if (no->valor == noInserir->valor) return FALSE;
+// Função que realiza a rotação da esquerda e retorna a raiz da subárvore depois da rotação
+itemNo *RotacionarL(itemNo *p) {
+  itemNo *u = p->esq;
+  int balancoU = CalcularBalanco(u);
+  printf("BalancoU: %d\n", balancoU);
+  
+  // Rotação LL:
+  //     P
+  //   U    =>    U
+  // V          V   P
+  if (balancoU == -1) {
+    // Descendo P. Colocando os itens da direita de U em P e anexando P na direita de U
+    p->esq = u->dir;
+    u->dir = p;
+    // Atualizando altura
+    p->h -= 2;
+    return u;
+  }
 
-  // Se o valor a ser inserido for menor que o do nó, prossiga à esquerda, se não à direita
-  if (noInserir->valor < no->valor) {
-    // Se existir nó à esquerda, prossiga
-    if (no->esq)
-      return InserirValorRecursiva(no->esq, noInserir);
+  // Rotação LR:
+  //   P
+  // U      =>    V
+  //   V        U   P
+  if (balancoU == 1) {
+    itemNo *v = u->dir;
+    // Descendo U. Colocando os itens da esquerda de V em U e anexando U na esquerda de V
+    u->dir = v->esq;
+    v->esq = u;
+    // Descendo P. Colocando os itens da direita de V em P e anexando P na direita de V
+    p->esq = v->dir;
+    v->dir = p;
+    // Atualizando altura
+    p->h -= 2;
+    u->h -= 1;
+    v->h += 1;
+    return v;
+  }
 
-    // Se não existir, o novo nó será o nó esquerda
-    else
-      no->esq = noInserir;
+  return NULL;
+}
+
+itemNo *RotacionarR(itemNo *p) {
+  itemNo *u = p->dir;
+  int balancoU = CalcularBalanco(u);
+
+  // Rotação RR:
+  // P
+  //   U    =>    U
+  //     V      P   V
+  if (balancoU == 1) {
+    // Descendo P
+    p->dir = u->esq;
+    u->esq = p;
+    // Atualizando altura
+    p->h -= 2;
+    return u;
+  }
+
+  // Rotação RL:
+  //   P
+  //     U  =>    V
+  //   V        P   U
+  if (balancoU == -1) {
+    itemNo *v = u->esq;
+    // Descendo U
+    u->esq = v->dir;
+    v->dir = u;
+    // Descendo P
+    p->dir = v->esq;
+    v->esq = p;
+    // Atualizando altura
+    p->h -= 2;
+    u->h -= 1;
+    v->h += 1;
+    return v;
+  }
+
+  return NULL;
+}
+
+// Função que imprime um aviso para quando a árvore estiver desbalanceada
+void ImprimirAvisoDesbalanceamento(itemNo *no, Lado lado) {
+  int balancoNo = CalcularBalanco(no);
+  printf("\nNo de valor %d desbalanceado. h = %d, balanco = %d\n", no->valor, no->h, balancoNo);
+  if(lado == ESQUERDO){
+    if(balancoNo == -2) printf("Fazendo rotacao LL\n");
+    else if(balancoNo == 2) printf("Fazendo rotacao LR\n");
   } else {
-    if (no->dir)
-      return InserirValorRecursiva(no->dir, noInserir);
-    else
-      no->dir = noInserir;
+    if(balancoNo == 2) printf("Fazendo rotacao RR\n");
+    else if(balancoNo == -2) printf("Fazendo rotacao RL\n");
+  }
+  printf("\n\n");
+}
+
+// Função recursiva que insere um valor na árvore
+Boolean InserirValorRecursiva(Arvore *arvore, itemNo *noAtual, itemNo *noPai, itemNo *novoNo) {
+  Boolean funcaoSucedida;
+  itemNo *raizDaRotacao;
+
+  // Se o valor já existir na árvore, retorne FALSE
+  if (novoNo->valor == noAtual->valor) return FALSE;
+
+  // Atualize a altura do nó atual e calcule o balanço
+  int balancoNoAtual = CalcularBalanco(noAtual);
+
+  // Se o valor a ser inserido for menor que o valor do nó atual, prossiga à esquerda
+  if (novoNo->valor < noAtual->valor) {
+    // Se o nó à esquerda não existir, insira o novo nó à esquerda
+    if (!noAtual->esq) {
+      noAtual->esq = novoNo;
+      // Se não existir nada a direita, atualize a altura
+      if (!noAtual->dir) noAtual->h = 1;
+      return TRUE;
+    }
+
+    // Chama a função até que seja achado um nó vazio para inserir o valor de maneira ordenada
+    funcaoSucedida = InserirValorRecursiva(arvore, noAtual->esq, noAtual, novoNo);
+    AtualizarAlturaDoNo(noAtual);
+
+    // Se a função não foi bem sucedida (já existe o valor), retorne FALSE
+    if(!funcaoSucedida) return FALSE;
+
+    // Se o nó estiver desbalanceado
+    if (balancoNoAtual >= 2 || balancoNoAtual <= -2) {
+      ImprimirAvisoDesbalanceamento(noAtual, ESQUERDO);
+
+      raizDaRotacao = RotacionarL(noAtual);
+
+      // Se o nó atual for a raiz, atualize a raiz da árvore
+      if (!noPai) {
+        arvore->raiz = raizDaRotacao;
+        return TRUE;
+      }
+
+      // Verifica qual lado está o nó atual e troca pela raiz da rotação
+      if (noPai->esq == noAtual) noPai->esq = raizDaRotacao;
+      else if (noPai->dir == noAtual) noPai->dir = raizDaRotacao;
+    }
+  }
+  // Se o valor a ser inserido for maior que o valor do nó atual, prossiga à direita
+  else {
+    // Se o nó à direita não existir, insira o novo nó à direita
+    if (!noAtual->dir) {
+      noAtual->dir = novoNo;
+      // Se não existir nada a esquerda, atualize a altura
+      if (!noAtual->esq) noAtual->h = 1;
+      return TRUE;
+    }
+
+    // Chama a função até que seja achado um nó vazio para inserir o valor de maneira ordenada
+    funcaoSucedida = InserirValorRecursiva(arvore, noAtual->dir, noAtual, novoNo);
+    AtualizarAlturaDoNo(noAtual);
+
+    // Se a função não foi bem sucedida (já existe o valor), retorne FALSE
+    if(!funcaoSucedida) return FALSE;
+
+    // Se o nó estiver desbalanceado
+    if (balancoNoAtual >= 2 || balancoNoAtual <= -2) {
+      ImprimirAvisoDesbalanceamento(noAtual, DIREITO);
+
+      raizDaRotacao = RotacionarR(noAtual);
+
+      // Se o nó atual for a raiz, atualize a raiz da árvore
+      if (!noPai) {
+        arvore->raiz = raizDaRotacao;
+        return TRUE;
+      }
+
+      // Verifica qual lado está o nó atual e troca pela raiz da rotação
+      if (noPai->esq == noAtual) noPai->esq = raizDaRotacao;
+      else if (noPai->dir == noAtual) noPai->dir = raizDaRotacao;
+    }
   }
 
   return TRUE;
 }
 
-// Função recursiva que insere um valor não existente ordenadamente
-Boolean InserirValor(Arvore* arvore, TipoValor valor) {
+// Função que insere um valor na árvore
+Boolean InserirValor(Arvore *arvore, TipoValor valor) {
   // Declarando o novo nó a ser inserido na árvore
-  itemNo* novoNo = malloc(sizeof(itemNo));
+  itemNo *novoNo = malloc(sizeof(itemNo));
   novoNo->valor = valor;
   novoNo->esq = NULL;
   novoNo->dir = NULL;
+  novoNo->h = 0;
 
   // Caso ainda não existir raiz
-  if (!arvore->raiz) {
+  if (!arvore->raiz){
     arvore->raiz = novoNo;
     return TRUE;
-  }
+  } 
 
-  return InserirValorRecursiva(arvore->raiz, novoNo);
+  return InserirValorRecursiva(arvore, arvore->raiz, NULL, novoNo);
 }
 
 // Função que retorna o nó pai de um nó
