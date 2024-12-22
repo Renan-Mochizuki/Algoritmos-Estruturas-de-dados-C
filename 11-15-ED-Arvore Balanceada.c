@@ -89,9 +89,6 @@ int CalcularBalanco(itemNo* no) {
   int altura_esq = (no->esq) ? no->esq->h : -1;
   int altura_dir = (no->dir) ? no->dir->h : -1;
 
-printf("Altura esq: %d\n", altura_esq);
-printf("Altura dir: %d\n", altura_dir);
-printf("Balanco: %d\n", altura_dir - altura_esq);
   return altura_dir - altura_esq;
 }
 
@@ -116,7 +113,6 @@ void AtualizarAlturaDoNo(itemNo* no) {
 itemNo *RotacionarL(itemNo *p) {
   itemNo *u = p->esq;
   int balancoU = CalcularBalanco(u);
-  printf("BalancoU: %d\n", balancoU);
   
   // Rotação LL:
   //     P
@@ -195,27 +191,26 @@ itemNo *RotacionarR(itemNo *p) {
 // Função que imprime um aviso para quando a árvore estiver desbalanceada
 void ImprimirAvisoDesbalanceamento(itemNo *no, Lado lado) {
   int balancoNo = CalcularBalanco(no);
-  printf("\nNo de valor %d desbalanceado. h = %d, balanco = %d\n", no->valor, no->h, balancoNo);
+  int balancoNoFilho;
+  printf("No de valor %d desbalanceado. h = %d, balanco = %d\n", no->valor, no->h, balancoNo);
   if(lado == ESQUERDO){
-    if(balancoNo == -2) printf("Fazendo rotacao LL\n");
-    else if(balancoNo == 2) printf("Fazendo rotacao LR\n");
+    balancoNoFilho = CalcularBalanco(no->esq);
+    if(balancoNoFilho == -1) printf("Fazendo rotacao LL\n");
+    else if(balancoNoFilho == 1) printf("Fazendo rotacao LR\n");
   } else {
-    if(balancoNo == 2) printf("Fazendo rotacao RR\n");
-    else if(balancoNo == -2) printf("Fazendo rotacao RL\n");
+    balancoNoFilho = CalcularBalanco(no->dir);
+    if(balancoNoFilho == 1) printf("Fazendo rotacao RR\n");
+    else if(balancoNoFilho == -1) printf("Fazendo rotacao RL\n");
   }
-  printf("\n\n");
 }
 
 // Função recursiva que insere um valor na árvore
 Boolean InserirValorRecursiva(Arvore *arvore, itemNo *noAtual, itemNo *noPai, itemNo *novoNo) {
-  Boolean funcaoSucedida;
-  itemNo *raizDaRotacao;
+  itemNo *raizDaRotacao, *noAProsseguir;
+  Lado lado;
 
   // Se o valor já existir na árvore, retorne FALSE
   if (novoNo->valor == noAtual->valor) return FALSE;
-
-  // Atualize a altura do nó atual e calcule o balanço
-  int balancoNoAtual = CalcularBalanco(noAtual);
 
   // Se o valor a ser inserido for menor que o valor do nó atual, prossiga à esquerda
   if (novoNo->valor < noAtual->valor) {
@@ -226,30 +221,8 @@ Boolean InserirValorRecursiva(Arvore *arvore, itemNo *noAtual, itemNo *noPai, it
       if (!noAtual->dir) noAtual->h = 1;
       return TRUE;
     }
-
-    // Chama a função até que seja achado um nó vazio para inserir o valor de maneira ordenada
-    funcaoSucedida = InserirValorRecursiva(arvore, noAtual->esq, noAtual, novoNo);
-    AtualizarAlturaDoNo(noAtual);
-
-    // Se a função não foi bem sucedida (já existe o valor), retorne FALSE
-    if(!funcaoSucedida) return FALSE;
-
-    // Se o nó estiver desbalanceado
-    if (balancoNoAtual >= 2 || balancoNoAtual <= -2) {
-      ImprimirAvisoDesbalanceamento(noAtual, ESQUERDO);
-
-      raizDaRotacao = RotacionarL(noAtual);
-
-      // Se o nó atual for a raiz, atualize a raiz da árvore
-      if (!noPai) {
-        arvore->raiz = raizDaRotacao;
-        return TRUE;
-      }
-
-      // Verifica qual lado está o nó atual e troca pela raiz da rotação
-      if (noPai->esq == noAtual) noPai->esq = raizDaRotacao;
-      else if (noPai->dir == noAtual) noPai->dir = raizDaRotacao;
-    }
+    lado = ESQUERDO;
+    noAProsseguir = noAtual->esq;
   }
   // Se o valor a ser inserido for maior que o valor do nó atual, prossiga à direita
   else {
@@ -260,30 +233,37 @@ Boolean InserirValorRecursiva(Arvore *arvore, itemNo *noAtual, itemNo *noPai, it
       if (!noAtual->esq) noAtual->h = 1;
       return TRUE;
     }
+    lado = DIREITO;
+    noAProsseguir = noAtual->dir;
+  }
 
-    // Chama a função até que seja achado um nó vazio para inserir o valor de maneira ordenada
-    funcaoSucedida = InserirValorRecursiva(arvore, noAtual->dir, noAtual, novoNo);
-    AtualizarAlturaDoNo(noAtual);
+  // Chama a função até que seja achado um nó vazio para inserir o valor de maneira ordenada
+  Boolean funcaoSucedida = InserirValorRecursiva(arvore, noAProsseguir, noAtual, novoNo);
+  AtualizarAlturaDoNo(noAtual);
+  int balancoNoAtual = CalcularBalanco(noAtual);
 
-    // Se a função não foi bem sucedida (já existe o valor), retorne FALSE
-    if(!funcaoSucedida) return FALSE;
+  // Se a função não foi bem sucedida (já existe o valor), retorne FALSE
+  if(!funcaoSucedida) return FALSE;
 
-    // Se o nó estiver desbalanceado
-    if (balancoNoAtual >= 2 || balancoNoAtual <= -2) {
-      ImprimirAvisoDesbalanceamento(noAtual, DIREITO);
+  // Se o nó estiver desbalanceado
+  if (balancoNoAtual >= 2 || balancoNoAtual <= -2) {
+    ImprimirValores(arvore);
+    ImprimirAvisoDesbalanceamento(noAtual, lado);
 
+    if(lado == ESQUERDO) 
+      raizDaRotacao = RotacionarL(noAtual);
+    else 
       raizDaRotacao = RotacionarR(noAtual);
 
-      // Se o nó atual for a raiz, atualize a raiz da árvore
-      if (!noPai) {
-        arvore->raiz = raizDaRotacao;
-        return TRUE;
-      }
-
-      // Verifica qual lado está o nó atual e troca pela raiz da rotação
-      if (noPai->esq == noAtual) noPai->esq = raizDaRotacao;
-      else if (noPai->dir == noAtual) noPai->dir = raizDaRotacao;
+    // Se o nó atual for a raiz, atualize a raiz da árvore
+    if (!noPai) {
+      arvore->raiz = raizDaRotacao;
+      return TRUE;
     }
+
+    // Verifica qual lado está o nó atual e troca pela raiz da rotação
+    if (noPai->esq == noAtual) noPai->esq = raizDaRotacao;
+    else if (noPai->dir == noAtual) noPai->dir = raizDaRotacao;
   }
 
   return TRUE;
